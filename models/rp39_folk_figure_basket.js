@@ -1,0 +1,1 @@
+PAGE_DATA_CHUNKS("models/rp39_folk_figure_basket", ["models/chunks/rp39_folk_figure_basket.part1.js", "models/chunks/rp39_folk_figure_basket.part2.js", "models/chunks/rp39_folk_figure_basket.part3.js"]);

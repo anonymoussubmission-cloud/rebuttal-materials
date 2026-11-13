@@ -1,0 +1,1 @@
+PAGE_DATA_CHUNKS("models/rp41_gourd_vase_painted", ["models/chunks/rp41_gourd_vase_painted.part1.js", "models/chunks/rp41_gourd_vase_painted.part2.js", "models/chunks/rp41_gourd_vase_painted.part3.js"]);
