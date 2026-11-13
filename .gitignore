@@ -1,0 +1,13 @@
+.DS_Store
+.AppleDouble/
+node_modules/
+*.log
+.env
+.env.*
+*.bak
+*.zip
+*~
+.codex/
+.idea/
+.vscode/
+__pycache__/

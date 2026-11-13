@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Interactive PBR material results: real photographs and comparisons across reference lighting.">
+<title>DSTex · Material Results</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%2320352f'/%3E%3Cpath d='m20 7 12 7v12l-12 7-12-7V14z' fill='none' stroke='%23d9e9a9' stroke-width='2'/%3E%3Cpath d='m8 14 12 7 12-7M20 21v12' fill='none' stroke='%23d9e9a9' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip-link" href="#real">Skip to results</a>
+<canvas id="gl" aria-hidden="true"></canvas>
+<nav class="site-nav" aria-label="Main navigation"><div class="nav-inner">
+  <a class="brand" href="#top" aria-label="DSTex, back to top"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="m16 3 11 6.5v13L16 29 5 22.5v-13zM5 9.5 16 16l11-6.5M16 16v13"/></svg>DSTex</a>
+  <div class="nav-links"><a href="#real">Real photographs</a><a href="#sweep">Lighting comparison</a></div>
+</div></nav>
+<header class="hero page" id="top">
+  <h1>Native <em>PBR</em><br>texture generation.</h1>
+  <p>Drag to rotate all views together. Switch lighting or inspect individual material channels. Select a photograph to enlarge it.</p>
+</header>
+<div class="viewer-tools"><div class="toolbar page" aria-label="Viewer controls">
+  <div class="channel-control"><span class="control-label" id="channel-label">Display</span><div class="segmented" role="group" aria-labelledby="channel-label">
+    <button type="button" data-channel="pbr" class="active" aria-pressed="true">Rendered</button>
+    <button type="button" data-channel="albedo" aria-pressed="false">Base color</button>
+    <button type="button" data-channel="metallic" aria-pressed="false">Metallic</button>
+    <button type="button" data-channel="roughness" aria-pressed="false">Roughness</button>
+    <button type="button" data-channel="mr" aria-pressed="false" title="Red: metallic; green: roughness">MR <span class="mr-dot" aria-hidden="true"></span></button>
+  </div></div>
+  <div class="environment-control"><label class="control-label" for="environment">View lighting</label><select id="environment"><option value="overcast">Overcast sky</option><option value="studio">Photo studio</option><option value="workshop">Workshop</option><option value="midday">Midday sun</option></select></div>
+  <div class="motion-controls"><label class="check"><input type="checkbox" id="spin"><span class="switch" aria-hidden="true"></span>Auto-rotate</label><label class="zoom-control" for="zoom">Zoom<input type="range" id="zoom" min="0.6" max="2.5" step="0.01" value="1"></label><button type="button" id="reset" class="reset-button" title="Reset the shared camera and zoom"><span aria-hidden="true">↺</span> Reset</button></div>
+  <span class="sr-only" id="channel-status" role="status">Rendered · Overcast sky</span>
+</div></div>
+<main class="page">
+  <section id="real" class="results-section" aria-labelledby="real-title">
+    <h2 id="real-title">Real photographs</h2>
+    <p class="section-intro">Each result uses the photograph in its corner. Ground-truth materials are unavailable for these examples.</p>
+    <div class="gallery-bar"><div class="pager" id="real-pager" role="group" aria-label="Photograph set"></div><span class="sr-only" id="real-range" aria-live="polite"></span></div>
+    <div class="grid" id="real-grid"></div>
+  </section>
+  <section id="sweep" class="results-section" aria-labelledby="sweep-title">
+    <h2 id="sweep-title">Reference lighting</h2>
+    <p class="section-intro">Each column uses a different input light, indicated by its mirror ball. The toolbar relights all outputs together.</p>
+    <div class="gallery-bar"><span class="gallery-label">Asset</span><div class="pager" id="sweep-pager" role="group" aria-label="Asset"></div></div>
+    <div class="comparison-scroll" tabindex="0" role="region" aria-label="Lighting comparison. Scroll horizontally on small screens."><div class="sweep" id="sweep-grid"></div></div>
+    <p class="mobile-scroll-hint">Swipe horizontally to see every reference and ground truth <span aria-hidden="true">→</span></p>
+  </section>
+</main>
+<footer class="page">
+  <details class="credits-details"><summary><span>Image sources &amp; licenses</span><span aria-hidden="true">+</span></summary><div class="credits-body"><p>Environment maps: Poly Haven (CC0). Reference photographs: Wikimedia Commons, resized.</p><ol id="credits"></ol></div></details>
+</footer>
+<dialog id="photo-dialog" aria-labelledby="photo-dialog-title"><div class="dialog-heading"><div><p class="eyebrow">Input photograph</p><h2 id="photo-dialog-title">Reference photograph</h2></div><button type="button" id="close-photo" aria-label="Close photograph">✕</button></div><img id="photo-dialog-image" alt=""><div class="photo-attribution"><a id="photo-dialog-source" target="_blank" rel="noopener noreferrer">View original photograph <span aria-hidden="true">↗</span></a><p id="photo-dialog-credit"></p></div></dialog>
+<noscript><p class="noscript-message">Enable JavaScript to explore the 3D results.</p></noscript>
+<script src="vendor/three.min.js"></script><script src="vendor/GLTFLoader.js"></script><script src="vendor/RGBELoader.js"></script><script src="vendor/OrbitControls.js"></script><script src="vendor/meshopt_decoder.js"></script><script src="manifest.js"></script><script src="app.js"></script>
+</body>
+</html>
