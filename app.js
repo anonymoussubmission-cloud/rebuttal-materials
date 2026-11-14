@@ -5,7 +5,7 @@
 // whole page is one WebGL context drawing every viewer into its cell (browsers cap contexts at ~16).
 "use strict";
 
-const REAL_PER_PAGE = 8;
+const REAL_PER_PAGE = document.body.classList.contains("response-page") ? 4 : 8;
 const CAMERA_DISTANCE = 3.9; // fits the unit sphere that every model is normalised into, at 30 degrees
 const CAMERA_HOME = new THREE.Vector3(0, 0.9, CAMERA_DISTANCE).setLength(CAMERA_DISTANCE);
 
@@ -86,6 +86,8 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 50);
 camera.position.copy(CAMERA_HOME);
 const state = { channel: "pbr", environment: null, environmentName: null, zoom: 1, spin: false };
+// Each inline example section has its own controls; all views remain synchronized.
+const controlElements = (name) => [...document.querySelectorAll('#' + name + ', [data-viewer-control="' + name + '"]')];
 
 const loader = new THREE.GLTFLoader();
 loader.setMeshoptDecoder(MeshoptDecoder);
@@ -252,14 +254,14 @@ function setEnvironment(name) {
     for (const view of views) view.scene.environment = texture;
   }).catch((error) => {
     environments.delete(name);
-    if (state.environmentName === name) document.getElementById("channel-status").textContent = "Lighting unavailable. Please select it again.";
+    if (state.environmentName === name) controlElements("channel-status").forEach(node => { node.textContent = "Lighting unavailable. Please select it again."; });
     console.error(error);
   });
 }
 
 function setSpin(on) {
   state.spin = on;
-  document.getElementById("spin").checked = on;
+  controlElements("spin").forEach(input => { input.checked = on; });
 }
 
 let lastFrame = 0;
@@ -425,31 +427,39 @@ function credits() {
 
 function updateStatus() {
   const labels = { pbr: "Rendered", albedo: "Base color", metallic: "Metallic", roughness: "Roughness", mr: "MR · Red: metallic / Green: roughness" };
-  const environment = document.getElementById("environment");
-  environment.disabled = state.channel !== "pbr";
-  environment.title = state.channel === "pbr" ? "Lighting used to view every output" : "Material channels are shown without lighting. Select Rendered to relight.";
-  environment.parentElement.classList.toggle("is-inactive", environment.disabled);
-  document.getElementById("channel-status").textContent = labels[state.channel] + (state.channel === "pbr" ? " · " + environment.selectedOptions[0].text : " · Unlit");
+  const environments = controlElements("environment");
+  environments.forEach(environment => {
+    environment.value = state.environmentName || "overcast";
+    environment.disabled = state.channel !== "pbr";
+    environment.title = state.channel === "pbr" ? "Lighting used to view every output" : "Material channels are shown without lighting. Select Rendered to relight.";
+    environment.parentElement.classList.toggle("is-inactive", environment.disabled);
+  });
+  controlElements("channel-status").forEach(node => {
+    node.textContent = labels[state.channel] + (state.channel === "pbr" ? " · " + environments[0].selectedOptions[0].text : " · Unlit");
+  });
 }
 
-document.getElementById("environment").addEventListener("change", (event) => setEnvironment(event.target.value));
+controlElements("environment").forEach(input => input.addEventListener("change", (event) => setEnvironment(event.target.value)));
 document.querySelectorAll("[data-channel]").forEach((button) => button.addEventListener("click", () => {
   state.channel = button.dataset.channel;
   document.querySelectorAll("[data-channel]").forEach((b) => {
-    b.classList.toggle("active", b === button);
-    b.setAttribute("aria-pressed", String(b === button));
+    b.classList.toggle("active", b.dataset.channel === state.channel);
+    b.setAttribute("aria-pressed", String(b.dataset.channel === state.channel));
   });
   for (const view of views) applyChannel(view);
   updateStatus();
 }));
-document.getElementById("spin").addEventListener("change", (event) => setSpin(event.target.checked));
-document.getElementById("zoom").addEventListener("input", (event) => { state.zoom = Number(event.target.value); });
-document.getElementById("reset").addEventListener("click", () => {
+controlElements("spin").forEach(input => input.addEventListener("change", (event) => setSpin(event.target.checked)));
+controlElements("zoom").forEach(input => input.addEventListener("input", (event) => {
+  state.zoom = Number(event.target.value);
+  controlElements("zoom").forEach(other => { other.value = state.zoom; });
+}));
+controlElements("reset").forEach(button => button.addEventListener("click", () => {
   camera.position.copy(CAMERA_HOME);
   setSpin(false);
   state.zoom = 1;
-  document.getElementById("zoom").value = 1;
-});
+  controlElements("zoom").forEach(input => { input.value = 1; });
+}));
 
 document.getElementById("close-photo").addEventListener("click", () => document.getElementById("photo-dialog").close());
 document.getElementById("photo-dialog").addEventListener("click", (event) => {
@@ -459,10 +469,12 @@ document.getElementById("photo-dialog").addEventListener("click", (event) => {
 });
 
 // Use actual control heights so anchor links land below both sticky bars at every width.
-const stickyResize = new ResizeObserver(() => {
-  document.documentElement.style.setProperty("--tools-height", document.querySelector(".viewer-tools").getBoundingClientRect().height + "px");
-});
-stickyResize.observe(document.querySelector(".viewer-tools"));
+if (!document.body.classList.contains("response-page")) {
+  const stickyResize = new ResizeObserver(() => {
+    document.documentElement.style.setProperty("--tools-height", document.querySelector(".viewer-tools").getBoundingClientRect().height + "px");
+  });
+  stickyResize.observe(document.querySelector(".viewer-tools"));
+}
 
 setEnvironment("overcast");
 const realPages = Math.ceil(MANIFEST.real.length / REAL_PER_PAGE);

@@ -3,7 +3,9 @@
 Real-photograph examples and a comparison of DSTex, TRELLIS.2, and ground-truth materials
 across reference lighting.
 
-Open `index.html` in a browser. All viewer resources are included; no build is required.
+Open `response.html` for the author response, or `index.html` for the dedicated gallery. Choose a reviewer on the response page to see their questions, answers, and supporting tables and figures. Real-photograph models and reference-lighting comparisons are embedded beside the relevant responses; all 16 real-photograph examples are available in four sets. Reviewer links use `response.html?reviewer=NmGX` (or `UMid`, `GgL7`).
+
+Open either page in a browser. All viewer resources are included; no build is required.
 
 - Drag an object to rotate every view together, or focus it and use the arrow keys.
 - Switch the display channel and view lighting using the shared controls.
