@@ -427,19 +427,31 @@ function credits() {
 
 function updateStatus() {
   const labels = { pbr: "Rendered", albedo: "Base color", metallic: "Metallic", roughness: "Roughness", mr: "MR · Red: metallic / Green: roughness" };
+  const environmentLabels = { overcast: "Overcast sky", studio: "Photo studio", workshop: "Workshop", midday: "Midday sun" };
+  const activeEnvironment = state.environmentName || "overcast";
+  const environmentTitle = state.channel === "pbr" ? "Lighting used to render every output" : "Material channels are shown without lighting. Select Rendered to relight.";
   const environments = controlElements("environment");
   environments.forEach(environment => {
-    environment.value = state.environmentName || "overcast";
+    environment.value = activeEnvironment;
     environment.disabled = state.channel !== "pbr";
-    environment.title = state.channel === "pbr" ? "Lighting used to view every output" : "Material channels are shown without lighting. Select Rendered to relight.";
+    environment.title = environmentTitle;
     environment.parentElement.classList.toggle("is-inactive", environment.disabled);
   });
+  controlElements("environment-option").forEach(button => {
+    const selected = button.dataset.environment === activeEnvironment;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+    button.disabled = state.channel !== "pbr";
+    button.title = environmentTitle;
+    button.closest(".environment-control").classList.toggle("is-inactive", button.disabled);
+  });
   controlElements("channel-status").forEach(node => {
-    node.textContent = labels[state.channel] + (state.channel === "pbr" ? " · " + environments[0].selectedOptions[0].text : " · Unlit");
+    node.textContent = labels[state.channel] + (state.channel === "pbr" ? " · " + environmentLabels[activeEnvironment] : " · Unlit");
   });
 }
 
 controlElements("environment").forEach(input => input.addEventListener("change", (event) => setEnvironment(event.target.value)));
+controlElements("environment-option").forEach(button => button.addEventListener("click", () => setEnvironment(button.dataset.environment)));
 document.querySelectorAll("[data-channel]").forEach((button) => button.addEventListener("click", () => {
   state.channel = button.dataset.channel;
   document.querySelectorAll("[data-channel]").forEach((b) => {

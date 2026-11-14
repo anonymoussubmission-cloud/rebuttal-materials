@@ -5,53 +5,62 @@
   const buttons = [...document.querySelectorAll('[data-reviewer]')];
   const select = document.getElementById('reviewer-select');
   const body = document.querySelector('.response-body');
+  const appendix = document.getElementById('appendix');
   const nav = document.querySelector('.reading-nav ol');
   const items = new Map([...nav.children].map(item => [item.dataset.topic, item]));
+  const lightingEvidence = document.getElementById('lighting-evidence');
   const defaults = new Map(topics.map(topic => [topic.id, {
-    question: topic.querySelector('.concern').textContent.replace('Question · paraphrased', '').trim(),
+    question: topic.querySelector('.concern-text').textContent.trim(),
+    concernLabel: topic.querySelector('.concern-label').textContent,
+    title: topic.querySelector('.question-title').textContent,
+    navTitle: items.get(topic.id).querySelector('a > span:last-child').textContent,
     kicker: topic.querySelector('.topic-number').textContent,
     navLabel: items.get(topic.id).querySelector('.nav-question').textContent
   }]));
   const reviewers = {
     NmGX: {
       order: ['contribution', 'capacity', 'costs', 'materials', 'real-photo-response'],
-      labels: {contribution: 'Q1', capacity: 'Q2', costs: 'Q2', materials: 'Q3–Q4', 'real-photo-response': 'Q4'},
+      labels: {contribution: 'Q1', capacity: 'Q2', costs: 'Q2', materials: 'Q3', 'real-photo-response': 'Q4'},
+      titles: {materials: 'Material-channel accuracy', 'real-photo-response': 'Real photographs & varied lighting'},
       subtitle: 'Q1–Q4 · Prior work, decoder capacity, material evaluation, and real photographs.',
       questions: {
         contribution: 'How does the Anchor Densifier differ from prior token expansion, particularly MSVS-VAE?',
         capacity: 'Does densification outperform deeper or wider standard decoders under a similar computational budget?',
         costs: 'What are the actual decoding latency and memory costs, with texture baking reported separately?',
-        materials: 'How much do metallic and roughness improve, and how do predictions behave under different reference lighting?',
-        'real-photo-response': 'Can the method handle real photographs with varied lighting, beyond generated-image examples?'
+        materials: 'Report separate generation metrics for the metallic and roughness channels.',
+        'real-photo-response': 'Provide results on real photographs or reference images under varied lighting conditions.'
       }
     },
     UMid: {
-      order: ['latent-budget', 'costs', 'contribution', 'capacity'],
-      labels: {'latent-budget': 'Q1', costs: 'Runtime', contribution: 'Novelty / FiLM', capacity: 'Capacity'},
+      order: ['latent-budget', 'costs', 'contribution', 'capacity', 'film'],
+      labels: {'latent-budget': 'Q1 / W3', costs: 'W3', contribution: 'W1', film: 'W2', capacity: 'W1'},
       subtitle: '16K quality and runtime, prior-work positioning, FiLM, and decoder capacity.',
       questions: {
         'latent-budget': 'Report full-set quality and end-to-end runtime for both 16K settings, especially densified 16K versus unexpanded 32K.',
         costs: 'How does the revised runtime relate to the original end-to-end times, and where is the time spent?',
-        contribution: 'What is the contribution relative to existing native texturing methods, and how strong is the evidence for relative FiLM?',
+        contribution: 'What is the contribution relative to existing native texturing methods?',
+        film: 'Does offset-conditioned FiLM provide a perceptual benefit beyond expansion with absolute positional embeddings?',
         capacity: 'How much of the improvement comes from decoder capacity, rather than the densification design?'
       }
     },
     GgL7: {
       order: ['capacity', 'latent-budget', 'costs', 'materials', 'real-photo-response'],
-      labels: {capacity: 'Q1', 'latent-budget': 'Q1', costs: 'Q2', materials: 'Q3', 'real-photo-response': 'Q3'},
-      subtitle: 'Q1–Q3 · Matched-budget comparisons, stage costs and memory, and material evaluation.',
+      labels: {capacity: 'Q1', 'latent-budget': 'Q1', costs: 'Q2', materials: 'Q3', 'real-photo-response': 'W3'},
+      subtitle: 'Q1–Q3 and W3 · Budget comparisons, stage costs and memory, material evaluation, and real photographs.',
       questions: {
         capacity: 'Compare against deeper and wider decoders at a representative matched decoding budget.',
         'latent-budget': 'How does decoder densification compare with increasing the diffusion latent count?',
         costs: 'Separate decoding and baking costs, report peak memory, and compare expansion factors.',
-        materials: 'Evaluate separate material channels across reference lighting and attribute the relighting improvement.',
+        materials: 'Evaluate material stability under additional novel HDRIs, report metallic and roughness metrics, and identify which channels contribute to the relighting improvement.',
         'real-photo-response': 'How do predicted materials behave on real inputs, including failure cases?'
       }
     }
   };
   let activeReviewer = 'all';
+  let pendingViewerAnchor = null;
   function setReviewer(requested, updateUrl = false, moveFocus = false) {
     activeReviewer = Object.hasOwn(reviewers, requested) ? requested : 'all';
+    document.body.dataset.activeReviewer = activeReviewer;
     const config = reviewers[activeReviewer];
     const order = config ? config.order : topics.map(topic => topic.id);
     const visible = new Set(order);
@@ -59,22 +68,39 @@
       const topic = topics.find(topic => topic.id === id);
       topic.hidden = !visible.has(id);
       items.get(id).hidden = topic.hidden;
-      body.appendChild(topic);
+      body.insertBefore(topic, appendix);
       nav.appendChild(items.get(id));
       const label = config?.labels[id];
-      topic.querySelector('.topic-number').textContent = label ? 'Reviewer ' + activeReviewer + ' · ' + label : defaults.get(id).kicker;
+      topic.querySelector('.question-number').textContent = label || defaults.get(id).navLabel;
+      topic.querySelector('.question-title').textContent = config?.titles?.[id] || defaults.get(id).title;
+      items.get(id).querySelector('a > span:last-child').textContent = config?.titles?.[id] || defaults.get(id).navTitle;
+      topic.querySelector('.topic-kicker').hidden = false;
+      topic.querySelector('.topic-number').textContent = label ? activeReviewer + ' · ' + label : defaults.get(id).kicker;
       items.get(id).querySelector('.nav-question').textContent = label || defaults.get(id).navLabel;
       topic.querySelectorAll('.reviewer-ref').forEach(ref => { ref.hidden = !!config; });
-      const caption = document.createElement('span');
-      caption.textContent = config ? 'Your question · paraphrased' : 'Question · paraphrased';
-      topic.querySelector('.concern').replaceChildren(caption, document.createTextNode(config?.questions[id] || defaults.get(id).question));
+      const kind = label?.includes('Q') && label?.includes('W') ? 'Question / weakness' : label?.includes('W') ? 'Weakness' : 'Question';
+      topic.querySelector('.concern-label').textContent = label ? (kind === 'Question / weakness' ? 'Q / W:' : kind === 'Weakness' ? 'W:' : 'Q:') : defaults.get(id).concernLabel;
+      topic.querySelector('.concern-text').textContent = config?.questions[id] || defaults.get(id).question;
     }
+    // Keep Figure 5 and its live models with the question that asks for them.
+    const lightingSlot = document.querySelector('[data-lighting-slot="' + (activeReviewer === 'NmGX' ? 'real' : 'materials') + '"]');
+    lightingSlot.appendChild(lightingEvidence);
+    // GgL7 asks about lighting first, followed by material accuracy and attribution.
+    const materialTopic = document.getElementById('materials');
+    const materialLightingSlot = materialTopic.querySelector('[data-lighting-slot="materials"]');
+    const lightingPosition = activeReviewer === 'GgL7'
+      ? document.getElementById('material-accuracy')
+      : materialTopic.querySelector('.detail-link');
+    materialTopic.insertBefore(materialLightingSlot, lightingPosition);
+    document.querySelectorAll('[data-answer-for]').forEach(answer => {
+      answer.hidden = !answer.dataset.answerFor.split(/\s+/).includes(activeReviewer);
+    });
     buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.reviewer === activeReviewer)));
     select.value = activeReviewer;
     const title = document.getElementById('response-title');
-    title.textContent = config ? 'Response to Reviewer ' + activeReviewer : 'Responses to all reviewers';
+    title.textContent = config ? 'Reviewer ' + activeReviewer : 'All reviewer responses';
     document.title = 'DSTex · ' + (config ? 'Response to ' + activeReviewer : 'Author response');
-    document.getElementById('response-subtitle').textContent = config?.subtitle || 'Six topics, with the supporting tables and figures alongside each answer.';
+    document.getElementById('response-subtitle').textContent = config?.subtitle || 'Each reply includes its supporting figures and tables.';
     document.getElementById('filter-status').textContent = 'Showing ' + order.length + ' response topics for ' + (config ? 'reviewer ' + activeReviewer : 'all reviewers') + '.';
     const permalink = 'response.html' + (config ? '?reviewer=' + activeReviewer : '') + '#responses';
     document.getElementById('reviewer-permalink').href = permalink;
@@ -93,6 +119,7 @@
     try { id = decodeURIComponent(hash.slice(1)); } catch (_) { return; }
     const target = document.getElementById(id);
     if (!target) return;
+    if (target.tagName === 'DETAILS') target.open = true;
     if (target.closest('.response-topic')?.hidden) {
       setReviewer('all');
       try { const url = new URL(location.href); url.searchParams.delete('reviewer'); url.hash = hash; history.replaceState(null, '', url); } catch (_) {}
@@ -105,13 +132,24 @@
     setReviewer(new URLSearchParams(location.search).get('reviewer'));
     revealAnchor(location.hash);
   }
-  document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', () => revealAnchor(link.hash)));
+  document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', () => {
+    revealAnchor(link.hash);
+    if (['#interactive', '#sweep'].includes(link.hash) && viewerState !== 'ready') {
+      pendingViewerAnchor = link.hash;
+      startViewers();
+    }
+  }));
+  // Keep an explicit jump aligned after the lazy viewer inserts its galleries.
+  // Cancel it if the reader starts scrolling elsewhere while assets load.
+  for (const event of ['wheel', 'touchstart', 'keydown']) {
+    window.addEventListener(event, () => { pendingViewerAnchor = null; }, {passive: true});
+  }
   window.addEventListener('hashchange', () => revealAnchor(location.hash));
   window.addEventListener('popstate', restoreLocation);
   restoreLocation();
-  const navLinks = [...nav.querySelectorAll('a')];
+  const navLinks = [...document.querySelectorAll('.reading-nav ol a, [data-appendix-link]')];
   function updateReadingPosition() {
-    const visible = [...body.querySelectorAll('.response-topic')].filter(topic => !topic.hidden);
+    const visible = [...body.querySelectorAll('.response-topic, .appendix-section')].filter(topic => !topic.hidden && topic.getClientRects().length > 0);
     const current = visible.filter(topic => topic.getBoundingClientRect().top <= 150).at(-1) || visible[0];
     if (!current) return;
     for (const link of navLinks) {
@@ -126,6 +164,29 @@
     requestAnimationFrame(() => { readingUpdatePending = false; updateReadingPosition(); });
   }, {passive: true});
   updateReadingPosition();
+  appendix.addEventListener('toggle', updateReadingPosition);
+
+  // Only wide numeric tables need this hint; prose comparisons stack on mobile.
+  const tableRegions = [...document.querySelectorAll('.table-scroll')];
+  const tableHints = new Map(tableRegions.map(region => {
+    const hint = document.createElement('p');
+    hint.className = 'table-scroll-hint';
+    hint.textContent = 'Scroll horizontally to view all columns →';
+    hint.hidden = true;
+    region.after(hint);
+    return [region, hint];
+  }));
+  function updateTableHints() {
+    tableHints.forEach((hint, region) => {
+      hint.hidden = region.clientWidth === 0 || region.scrollWidth <= region.clientWidth + 1;
+    });
+  }
+  if ('ResizeObserver' in window) {
+    const tableObserver = new ResizeObserver(updateTableHints);
+    tableRegions.forEach(region => tableObserver.observe(region));
+  }
+  window.addEventListener('resize', updateTableHints, {passive: true});
+  updateTableHints();
 
   // Load the shared viewer when an inline example approaches the reading area.
   // No separate page or click-to-load step is needed.
@@ -158,6 +219,13 @@
       for (const src of scripts) await loadViewerScript(src);
       if (!document.querySelector('#real-grid .view')) throw new Error('Viewer initialization did not complete');
       viewerState = 'ready';
+      if (pendingViewerAnchor) {
+        const anchor = pendingViewerAnchor;
+        pendingViewerAnchor = null;
+        requestAnimationFrame(() => {
+          if (location.hash === anchor) document.getElementById(anchor.slice(1))?.scrollIntoView({block: 'start'});
+        });
+      }
       notes.forEach(note => { note.hidden = true; });
       document.querySelectorAll('.inline-3d .viewer-tools').forEach(toolbar => {
         toolbar.removeAttribute('inert');
@@ -188,4 +256,8 @@
     }
   }, {rootMargin: '600px 0px'});
   document.querySelectorAll('.inline-3d').forEach(section => viewerObserver.observe(section));
+  if (['#interactive', '#sweep'].includes(location.hash)) {
+    pendingViewerAnchor = location.hash;
+    startViewers();
+  }
 })();
