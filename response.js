@@ -20,11 +20,11 @@
   const reviewers = {
     NmGX: {
       order: ['contribution', 'capacity', 'costs', 'materials', 'real-photo-response'],
-      labels: {contribution: 'Q1', capacity: 'Q2', costs: 'Q2', materials: 'Q3', 'real-photo-response': 'Q4'},
+      labels: {contribution: 'W1 / Q1', capacity: 'Q2', costs: 'Q2', materials: 'Q3', 'real-photo-response': 'Q4'},
       titles: {materials: 'Material-channel accuracy', 'real-photo-response': 'Real photographs & varied lighting'},
       subtitle: 'Q1–Q4 · Prior work, decoder capacity, material evaluation, and real photographs.',
       questions: {
-        contribution: 'How does the Anchor Densifier differ from prior token expansion, particularly MSVS-VAE?',
+        contribution: 'The projection, position encoding, and FiLM components are standard. What is the contribution, and how does the Anchor Densifier differ from MSVS-VAE?',
         capacity: 'Does densification outperform deeper or wider standard decoders under a similar computational budget?',
         costs: 'What are the actual decoding latency and memory costs, with texture baking reported separately?',
         materials: 'Report separate generation metrics for the metallic and roughness channels.',
@@ -50,7 +50,7 @@
       questions: {
         capacity: 'Compare against deeper and wider decoders at a representative matched decoding budget.',
         'latent-budget': 'How does decoder densification compare with increasing the diffusion latent count?',
-        costs: 'Separate decoding and baking costs, report peak memory, and compare expansion factors.',
+        costs: 'Separate decoding and baking costs, report peak GPU memory, and compare expansion factors.',
         materials: 'Evaluate material stability under additional novel HDRIs, report metallic and roughness metrics, and identify which channels contribute to the relighting improvement.',
         'real-photo-response': 'How do predicted materials behave on real inputs, including failure cases?'
       }
