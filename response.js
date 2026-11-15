@@ -20,9 +20,9 @@
   const reviewers = {
     NmGX: {
       order: ['contribution', 'capacity', 'costs', 'materials', 'real-photo-response'],
-      labels: {contribution: 'W1 / Q1', capacity: 'Q2', costs: 'Q2', materials: 'Q3', 'real-photo-response': 'Q4'},
+      labels: {contribution: 'W1 / Q1', capacity: 'W2 / Q2', costs: 'W2 / Q2', materials: 'Q3', 'real-photo-response': 'W3 / Q4'},
       titles: {materials: 'Material-channel accuracy', 'real-photo-response': 'Real photographs & varied lighting'},
-      subtitle: 'Q1–Q4 · Prior work, decoder capacity, material evaluation, and real photographs.',
+      subtitle: 'W1–W3 / Q1–Q4 · Prior work, decoder capacity, material evaluation, and real photographs.',
       questions: {
         contribution: 'The projection, position encoding, and FiLM components are standard. What is the contribution, and how does the Anchor Densifier differ from MSVS-VAE?',
         capacity: 'Does densification outperform deeper or wider standard decoders under a similar computational budget?',
@@ -45,8 +45,8 @@
     },
     GgL7: {
       order: ['capacity', 'latent-budget', 'costs', 'materials', 'real-photo-response'],
-      labels: {capacity: 'Q1', 'latent-budget': 'Q1', costs: 'Q2', materials: 'Q3', 'real-photo-response': 'W3'},
-      subtitle: 'Q1–Q3 and W3 · Budget comparisons, stage costs and memory, material evaluation, and real photographs.',
+      labels: {capacity: 'W1 / Q1', 'latent-budget': 'W1 / Q1', costs: 'W2 / Q2', materials: 'Q3', 'real-photo-response': 'W3'},
+      subtitle: 'W1–W3 / Q1–Q3 · Budget comparisons, stage costs and memory, material evaluation, and real photographs.',
       questions: {
         capacity: 'Compare against deeper and wider decoders at a representative matched decoding budget.',
         'latent-budget': 'How does decoder densification compare with increasing the diffusion latent count?',
