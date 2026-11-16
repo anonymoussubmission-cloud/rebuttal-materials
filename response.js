@@ -9,6 +9,7 @@
   const nav = document.querySelector('.reading-nav ol');
   const items = new Map([...nav.children].map(item => [item.dataset.topic, item]));
   const lightingEvidence = document.getElementById('lighting-evidence');
+  const materialConsistency = document.getElementById('material-consistency');
   const defaults = new Map(topics.map(topic => [topic.id, {
     question: topic.querySelector('.concern-text').textContent.trim(),
     concernLabel: topic.querySelector('.concern-label').textContent,
@@ -21,7 +22,7 @@
     NmGX: {
       order: ['contribution', 'capacity', 'costs', 'materials', 'real-photo-response'],
       labels: {contribution: 'W1 / Q1', capacity: 'W2 / Q2', costs: 'W2 / Q2', materials: 'Q3', 'real-photo-response': 'W3 / Q4'},
-      titles: {materials: 'Material-channel accuracy', 'real-photo-response': 'Real photographs & varied lighting'},
+      titles: {materials: 'Material accuracy & consistency', 'real-photo-response': 'Real photographs & varied lighting'},
       subtitle: 'W1–W3 / Q1–Q4 · Prior work, decoder capacity, material evaluation, and real photographs.',
       questions: {
         contribution: 'The projection, position encoding, and FiLM components are standard. What is the contribution, and how does the Anchor Densifier differ from MSVS-VAE?',
@@ -85,6 +86,9 @@
     // Keep Figure 5 and its live models with the question that asks for them.
     const lightingSlot = document.querySelector('[data-lighting-slot="' + (activeReviewer === 'NmGX' ? 'real' : 'materials') + '"]');
     lightingSlot.appendChild(lightingEvidence);
+    // NmGX Q3 groups the accuracy and consistency metrics; Q4 keeps the lighting examples.
+    const consistencySlot = document.querySelector('[data-consistency-slot="' + (activeReviewer === 'NmGX' ? 'accuracy' : 'lighting') + '"]');
+    consistencySlot.appendChild(materialConsistency);
     // GgL7 asks about lighting first, followed by material accuracy and attribution.
     const materialTopic = document.getElementById('materials');
     const materialLightingSlot = materialTopic.querySelector('[data-lighting-slot="materials"]');
